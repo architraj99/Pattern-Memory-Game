@@ -20,6 +20,9 @@ let items = [
 ];
 
 let currentPattern = [];
+let playerSequence = [];
+let totalScore = 0;
+let totalLives = 3;
 
 function shuffleArray(array) {
 
@@ -38,6 +41,7 @@ function shuffleArray(array) {
 function generatePattern() {
 
     currentPattern = [];
+    playerSequence = [];
     let mixedItems = [...items];
 
     shuffleArray(mixedItems);
@@ -52,8 +56,9 @@ function showPattern() {
 
     patternText.innerText = currentPattern.join(" ");
     patternText.style.visibility = "visible";
+    optionsArea.innerHTML = "";
 
-    setTimeout(function() {
+    setTimeout(function () {
 
         patternText.style.visibility = "hidden";
         generateOptions();
@@ -67,20 +72,60 @@ function generateOptions() {
     let options = [...items];
     shuffleArray(options);
 
-    options.forEach(function(item) {
+    options.forEach(function (item) {
 
         let optionBtn = document.createElement("button");
         optionBtn.innerText = item;
         optionBtn.classList.add("option-btn");
 
+        optionBtn.addEventListener("click", function() {
+
+            handlePlayerChoice(item);
+            }
+        );
+
         optionsArea.appendChild(optionBtn);
     });
 }
 
-startBtn.addEventListener("click", function() {      
+function handlePlayerChoice(item) {
 
-    message.innerText = "Memorize the pattern";
+    playerSequence.push(item);
+    let currentIndex = playerSequence.length - 1;
 
-    generatePattern();
-    showPattern();
+    if (playerSequence[currentIndex] !== currentPattern[currentIndex]) {
+
+        totalLives--;
+
+        lives.innerText = "Lives: " + totalLives;
+        message.innerText = "Wrong Pattern";
+        message.style.color = "#dc2626";
+        playerSequence = [];
+        
+        return;
+    }
+
+    if (playerSequence.length === currentPattern.length) {
+
+        totalScore++;
+
+        score.innerText = "Score: " + totalScore;
+        message.innerText = "Correct Pattern";
+        message.style.color = "#16a34a";
+
+        setTimeout(function () {
+
+            generatePattern();
+            showPattern();
+        }, 1200);
+    }
+}
+
+startBtn.addEventListener("click", function() {
+
+        message.innerText = "Memorize the pattern";
+        message.style.color = "#475569";
+
+        generatePattern();
+        showPattern();
 });
