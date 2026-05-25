@@ -1,190 +1,290 @@
-let patternText = document.querySelector(".pattern-text");
-let startBtn = document.getElementById("startBtn");
-let optionsArea = document.querySelector(".options-area");
-let message = document.querySelector(".message");
-let score = document.querySelector(".score");
-let lives = document.querySelector(".lives");
+const seqEl = document.getElementById('seq');
+const startBtn = document.getElementById('startBtn');
+const resignBtn = document.getElementById('resignBtn');
+const optsEl = document.getElementById('opts');
+const msgEl = document.getElementById('msg');
+const scoreEl = document.getElementById('scoreEl');
+const dotsEl = document.getElementById('dotsEl');
+const bar = document.getElementById('bar');
+const tnum = document.getElementById('tnum');
+const timerRow = document.getElementById('timerRow');
 
-let items = [
-
-    "🔴",
-    "🟢",
-    "🔵",
-    "🟡",
-    "25",
-    "17",
-    "Dinosaur",
-    "Rocket",
-    "Cat",
-    "Alien"
+const items = [
+  '🔴', '🟢', '🔵', '🟡',
+  '25', '17', 'Dinosaur', 'Rocket', 'Cat', 'Alien'
 ];
 
-let currentPattern = [];
-let playerSequence = [];
-let totalScore = 0;
-let totalLives = 3;
-let timeLeft = 10;
-let countdown;
+let pattern = [];
+let sequence = [];
+let score = 0;
+let lives = 3;
+let timeLeft = 20;
+let timer;
+let memorizeTimer;
 
-function shuffleArray(array) {
+function shuffle(arr) {
 
-    for (let i = array.length - 1; i > 0; i--) {
+  const copy = [...arr];
 
-        let randomIndex = Math.floor(Math.random() * (i + 1) );
-        let temp = array[i];
-        array[i] = array[randomIndex];
-        array[randomIndex] = temp;
-    }
+  for (let i = copy.length - 1; i > 0; i--) {
 
-    return array;
+    const j = Math.floor(Math.random() * (i + 1) );
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+
+  return copy;
+}
+
+function setMsg(text, cls = '') {
+
+  msgEl.textContent = text;
+  msgEl.className = 'msg' + (cls ? ' ' + cls : '');
+}
+
+function updateDots() {
+
+  const dots = dotsEl.querySelectorAll('.dot');
+  dots.forEach((dot, i) => {
+
+    dot.className = 'dot' + (i >= lives ? ' off' : '');
+  });
+}
+
+function showStart() {
+
+  startBtn.style.display = 'block';
+  resignBtn.style.display = 'none';
+}
+
+function showResign() {
+
+  startBtn.style.display = 'none';
+  resignBtn.style.display = 'block';
+}
+
+function freezeBar() {
+
+  timerRow.style.visibility = 'hidden';
+  bar.style.transition = 'none';
+  bar.style.width = '100%';
+  bar.style.background = '#c4622d';
+  tnum.textContent = '20';
 }
 
 function startTimer() {
 
-    clearInterval(countdown);
-    timeLeft = 10;
-    let timerBox = document.querySelector(".timer");
-    timerBox.innerText = "Time: " + timeLeft;
+  clearInterval(timer);
+  clearInterval(memorizeTimer);
 
-    countdown = setInterval(function () {
+  timeLeft = 20;
+  timerRow.style.visibility = 'visible';
+  bar.style.transition = 'none';
+  bar.style.width = '100%';
+  bar.style.background = '#c4622d';
+  tnum.textContent = '20';
+  void bar.offsetWidth;
+  bar.style.transition = 'width 1s linear';
 
-            timeLeft--;
-            timerBox.innerText = "Time: " + timeLeft;
+  timer = setInterval(() => {
 
-            if (timeLeft <= 0) {
+    timeLeft--;
+    tnum.textContent = timeLeft;
+    bar.style.width = (timeLeft / 20 * 100) + '%';
 
-                clearInterval(countdown);
+    if (timeLeft <= 5) {
 
-                totalLives--;
-                lives.innerText = "Lives: " + totalLives;
-                message.innerText = "Time Up";
-                message.style.color = "#dc2626";
-
-                checkGameOver();
-
-                if (totalLives > 0) {
-
-                    setTimeout(function () {
-
-                        generatePattern();
-                        showPattern();
-                    }, 1000);
-                }
-            }
-        }, 1000);
-}
-
-function generatePattern() {
-
-    currentPattern = [];
-    playerSequence = [];
-    let mixedItems = [...items];
-
-    shuffleArray(mixedItems);
-
-    for (let i = 0; i < 5; i++) {
-
-        currentPattern.push(mixedItems[i] );
+      bar.style.background = '#dc2626';
     }
+
+    else if (timeLeft <= 10) {
+
+      bar.style.background = '#d97706';
+    }
+
+    else {
+
+      bar.style.background = '#c4622d';
+    }
+
+    if (timeLeft <= 0) {
+
+      clearInterval(timer);
+      lives--;
+      updateDots();
+      setMsg("Time's up.", 'bad');
+      checkGameOver();
+
+      if (lives > 0) {
+
+        setTimeout(() => {
+
+          generate();
+          show();
+        }, 1200);
+
+      }
+
+    }
+
+  }, 1000);
 }
 
-function showPattern() {
+function generate() {
 
-    patternText.innerText = currentPattern.join(" ");
-    patternText.style.visibility = "visible";
-    optionsArea.innerHTML = "";
-
-    setTimeout(function () {
-
-        patternText.style.visibility = "hidden";
-
-        generateOptions();
-        startTimer();
-    }, 3000);
+  pattern = shuffle(items).slice(0, 5);
+  sequence = [];
 }
 
-function generateOptions() {
+function show() {
 
-    optionsArea.innerHTML = "";
-    let options = [...items];
+  clearInterval(timer);
+  clearInterval(memorizeTimer);
 
-    shuffleArray(options);
+  showResign();
+  freezeBar();
+  seqEl.classList.remove('fade');
+  seqEl.textContent = pattern.join('  ');
+  optsEl.innerHTML = '';
+  let memTime = 8;
 
-    options.forEach(function (item) {
+  setMsg( 'Memorize — ' + memTime + 's remaining.');
 
-        let optionBtn = document.createElement("button");
-        optionBtn.innerText = item;
-        optionBtn.classList.add("option-btn");
+  memorizeTimer =
+    setInterval(() => {
 
-        optionBtn.addEventListener("click", function() {
-    
-            handlePlayerChoice(item);
-        });
+      memTime--;
 
-        optionsArea.appendChild(optionBtn);
-    });
+      if (memTime > 0) {
+
+        setMsg('Memorize — ' + memTime + 's remaining.');
+      }
+    }, 1000);
+
+  setTimeout(() => {
+
+    clearInterval(memorizeTimer);
+    seqEl.classList.add('fade');
+
+    setTimeout(() => {
+
+      seqEl.textContent = '· · · · ·';
+      seqEl.classList.remove('fade');
+    }, 300);
+
+    buildOptions();
+    startTimer();
+    setMsg('Rebuild it in order.');
+  }, 8000);
+}
+
+function buildOptions() {
+
+  optsEl.innerHTML = '';
+
+  shuffle(items).forEach(item => {
+
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.textContent = item;
+    btn.addEventListener('click', () => pick(item) );
+    optsEl.appendChild(btn);
+  });
+
+}
+
+function endGame() {
+
+  clearInterval(timer);
+  clearInterval(memorizeTimer);
+
+  lives = 0;
+
+  updateDots();
+
+  optsEl.innerHTML = '';
+  timerRow.style.visibility = 'visible';
+  bar.style.transition = 'none';
+  bar.style.width = '0%';
+  seqEl.textContent = '· · · · ·';
+
+  setMsg('Game over.', 'bad');
+
+  startBtn.textContent = 'Play again';
+
+  showStart();
 }
 
 function checkGameOver() {
 
-    if(totalLives <= 0) {
+  if (lives <= 0) {
 
-        clearInterval(countdown);
+    endGame();
+  }
 
-        totalLives = 0;
-        lives.innerText = "Lives: 0";
-        message.innerText = "Game Over";
-        message.style.color = "#dc2626";
-        optionsArea.innerHTML = "";
-        startBtn.innerText = "Restart Game";
-    }
 }
 
-function handlePlayerChoice(item) {
+function pick(item) {
 
-    playerSequence.push(item);
-    let currentIndex = playerSequence.length - 1;
+  sequence.push(item);
 
-    if(playerSequence[currentIndex] !== currentPattern[currentIndex] ) {
+  const currentIndex = sequence.length - 1;
 
-        totalLives--;
-        lives.innerText = "Lives: " + totalLives;
-        message.innerText = "Wrong Pattern";
-        message.style.color = "#dc2626";
-        playerSequence = [];
+  if (sequence[currentIndex] !== pattern[currentIndex] ) {
 
-        checkGameOver();
-        return;
+    clearInterval(timer);
+
+    lives--;
+    updateDots();
+    setMsg('Wrong pattern.', 'bad');
+    sequence = [];
+    checkGameOver();
+
+    if (lives > 0) {
+
+      setTimeout(() => {
+
+        generate();
+        show();
+
+      }, 1200);
     }
 
-    if (playerSequence.length === currentPattern.length) {
+    return;
+  }
 
-        clearInterval(countdown);
+  if (sequence.length === pattern.length) {
 
-        totalScore++;
-        score.innerText ="Score: " + totalScore;
-        message.innerText = "Correct Pattern";
-        message.style.color = "#16a34a";
+    clearInterval(timer);
 
-        setTimeout(function() {
+    score++;
+    scoreEl.textContent = score;
 
-            generatePattern();
-            showPattern();
-        }, 1200);
-    }
+    setMsg('Correct!', 'ok');
+
+    setTimeout(() => {
+
+      generate();
+      show();
+
+    }, 1200);
+
+  }
+
 }
 
-startBtn.addEventListener("click", function() {
+startBtn.addEventListener('click', () => {
 
-        if (totalLives <= 0) {
-            location.reload();
-            return;
-        }
-
-        message.innerText = "Memorize the pattern";
-        message.style.color = "#475569";
-
-        generatePattern();
-        showPattern();
+    if (lives <= 0) {
+      location.reload();
+      return;
     }
-);
+
+    generate();
+    show();
+});
+
+resignBtn.addEventListener('click', () => {
+
+    setMsg('You resigned.', 'bad');
+    endGame();
+}); 
