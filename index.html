@@ -3,26 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pattern Memory Game</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <title>Memory Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <div class="card">
-    <div class="top">
-      <span class="badge">Memory game</span>
+
+    <div class="game-title">
+      Memory Game
     </div>
-    <h1>Pattern recall</h1>
-    <p class="sub">Watch the sequence, then rebuild it in order</p>
+
+    <h1>Memory Game</h1>
+
+    <p class="sub">
+      Remember the pattern and repeat it.
+    </p>
 
     <div class="seq-box">
-      <span class="seq" id="seq">· · · · ·</span>
-    </div> 
+      <span class="seq" id="seq">
+        · · · · ·
+      </span>
+    </div>
 
-    <button class="start-btn" id="startBtn">Start round</button>
-    <button class="resign-btn" id="resignBtn">Resign</button>
+    <button class="start-btn" id="startBtn">
+      Start Game
+    </button>
+
+    <button class="resign-btn" id="resignBtn">
+      Give Up
+    </button>
 
     <div class="opts" id="opts"></div>
 
@@ -32,20 +42,25 @@
         <div class="fill" id="bar" style="width:100%"></div>
       </div>
 
-      <span class="tnum" id="tnum">10</span>
-    </div> 
+      <span id="tnum">20</span>
 
-    <p class="msg" id="msg">Ready when you are</p>
+    </div>
+
+    <p class="msg" id="msg">
+      Press Start To Play
+    </p>
 
     <div class="footer">
+
       <div>
-        <p class="stat-label">Score</p>
-        <p class="stat-val" id="scoreEl">0</p>
+        <p>Score</p>
+        <h2 id="scoreEl">0</h2>
       </div>
 
-      <div style="text-align:right">
-        <p class="stat-label">Lives</p>
-      
+      <div>
+
+        <p>Lives</p>
+
         <div class="dots" id="dotsEl">
           <div class="dot"></div>
           <div class="dot"></div>
@@ -59,5 +74,6 @@
   </div>
 
   <script src="script.js"></script>
+
 </body>
 </html>
