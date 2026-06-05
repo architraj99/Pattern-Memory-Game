@@ -1,17 +1,25 @@
-const seqEl = document.getElementById('seq');
-const startBtn = document.getElementById('startBtn');
-const resignBtn = document.getElementById('resignBtn');
-const optsEl = document.getElementById('opts');
-const msgEl = document.getElementById('msg');
-const scoreEl = document.getElementById('scoreEl');
-const dotsEl = document.getElementById('dotsEl');
-const bar = document.getElementById('bar');
-const tnum = document.getElementById('tnum');
-const timerRow = document.getElementById('timerRow');
+const seqEl = document.getElementById("seq");
+const startBtn = document.getElementById("startBtn");
+const resignBtn = document.getElementById("resignBtn");
+const optsEl = document.getElementById("opts");
+const msgEl = document.getElementById("msg");
+const scoreEl = document.getElementById("scoreEl");
+const dotsEl = document.getElementById("dotsEl");
+const bar = document.getElementById("bar");
+const tnum = document.getElementById("tnum");
+const timerRow = document.getElementById("timerRow");
 
 const items = [
-  '🔴', '🟢', '🔵', '🟡',
-  '25', '17', 'Dinosaur', 'Rocket', 'Cat', 'Alien'
+  "🔴",
+  "🟢",
+  "🔵",
+  "🟡",
+  "25",
+  "17",
+  "Dinosaur",
+  "Rocket",
+  "Cat",
+  "Alien"
 ];
 
 let pattern = [];
@@ -24,267 +32,249 @@ let memorizeTimer;
 
 function shuffle(arr) {
 
-  const copy = [...arr];
+  let copy = [...arr];
 
-  for (let i = copy.length - 1; i > 0; i--) {
+  for(let i = copy.length - 1; i > 0; i--) {
 
-    const j = Math.floor(Math.random() * (i + 1) );
-    [copy[i], copy[j]] = [copy[j], copy[i]];
+    let j = Math.floor(Math.random() * (i + 1));
+
+    let temp = copy[i];
+    copy[i] = copy[j];
+    copy[j] = temp;
   }
 
   return copy;
 }
 
-function setMsg(text, cls = '') {
+function updateLives() {
 
-  msgEl.textContent = text;
-  msgEl.className = 'msg' + (cls ? ' ' + cls : '');
-}
+  let dots = dotsEl.querySelectorAll(".dot");
 
-function updateDots() {
+  dots.forEach(function(dot, i) {
 
-  const dots = dotsEl.querySelectorAll('.dot');
-  dots.forEach((dot, i) => {
-
-    dot.className = 'dot' + (i >= lives ? ' off' : '');
+    if(i >= lives) {
+      dot.classList.add("off");
+    }
+    else {
+      dot.classList.remove("off");
+    }
   });
 }
 
-function showStart() {
+function generatePattern() {
 
-  startBtn.style.display = 'block';
-  resignBtn.style.display = 'none';
+  pattern = shuffle(items).slice(0, 5);
+  sequence = [];
 }
 
-function showResign() {
+function createButtons() {
 
-  startBtn.style.display = 'none';
-  resignBtn.style.display = 'block';
-}
+  optsEl.innerHTML = "";
 
-function freezeBar() {
+  shuffle(items).forEach(function(item) {
 
-  timerRow.style.visibility = 'hidden';
-  bar.style.transition = 'none';
-  bar.style.width = '100%';
-  bar.style.background = '#c4622d';
-  tnum.textContent = '20';
+    let btn = document.createElement("button");
+
+    btn.className = "opt";
+    btn.innerText = item;
+
+    btn.addEventListener("click", function() {
+      checkAnswer(item);
+    });
+
+    optsEl.appendChild(btn);
+
+  });
+
 }
 
 function startTimer() {
 
   clearInterval(timer);
-  clearInterval(memorizeTimer);
 
   timeLeft = 20;
-  timerRow.style.visibility = 'visible';
-  bar.style.transition = 'none';
-  bar.style.width = '100%';
-  bar.style.background = '#c4622d';
-  tnum.textContent = '20';
-  void bar.offsetWidth;
-  bar.style.transition = 'width 1s linear';
 
-  timer = setInterval(() => {
+  timerRow.style.visibility = "visible";
+  bar.style.width = "100%";
+  bar.style.background = "green";
+  tnum.innerText = timeLeft;
+
+  timer = setInterval(function() {
 
     timeLeft--;
-    tnum.textContent = timeLeft;
-    bar.style.width = (timeLeft / 20 * 100) + '%';
 
-    if (timeLeft <= 5) {
+    tnum.innerText = timeLeft;
 
-      bar.style.background = '#dc2626';
+    let percent = (timeLeft / 20) * 100;
+    bar.style.width = percent + "%";
+
+    if(timeLeft <= 5) {
+      bar.style.background = "red";
     }
-
-    else if (timeLeft <= 10) {
-
-      bar.style.background = '#d97706';
+    else if(timeLeft <= 10) {
+      bar.style.background = "orange";
     }
-
     else {
-
-      bar.style.background = '#c4622d';
+      bar.style.background = "green";
     }
 
-    if (timeLeft <= 0) {
+    if(timeLeft <= 0) {
 
       clearInterval(timer);
+
       lives--;
-      updateDots();
-      setMsg("Time's up.", 'bad');
-      checkGameOver();
 
-      if (lives > 0) {
+      updateLives();
 
-        setTimeout(() => {
+      msgEl.innerText = "Time Up!";
 
-          generate();
-          show();
-        }, 1200);
+      if(lives <= 0) {
+
+        gameOver();
+      }
+      else {
+
+        setTimeout(function() {
+
+          generatePattern();
+          showPattern();
+
+        }, 1000);
 
       }
 
     }
 
   }, 1000);
+
 }
 
-function generate() {
-
-  pattern = shuffle(items).slice(0, 5);
-  sequence = [];
-}
-
-function show() {
+function showPattern() {
 
   clearInterval(timer);
   clearInterval(memorizeTimer);
 
-  showResign();
-  freezeBar();
-  seqEl.classList.remove('fade');
-  seqEl.textContent = pattern.join('  ');
-  optsEl.innerHTML = '';
-  let memTime = 8;
+  startBtn.style.display = "none";
+  resignBtn.style.display = "block";
 
-  setMsg( 'Memorize — ' + memTime + 's remaining.');
+  seqEl.innerText = pattern.join(" ");
 
-  memorizeTimer =
-    setInterval(() => {
+  let seconds = 8;
 
-      memTime--;
+  msgEl.innerText = "Memorize: " + seconds;
 
-      if (memTime > 0) {
+  memorizeTimer = setInterval(function() {
 
-        setMsg('Memorize — ' + memTime + 's remaining.');
-      }
-    }, 1000);
+    seconds--;
 
-  setTimeout(() => {
+    if(seconds > 0) {
+      msgEl.innerText = "Memorize: " + seconds;
+    }
+
+  }, 1000);
+
+  setTimeout(function() {
 
     clearInterval(memorizeTimer);
-    seqEl.classList.add('fade');
 
-    setTimeout(() => {
+    seqEl.innerText = "· · · · ·";
 
-      seqEl.textContent = '· · · · ·';
-      seqEl.classList.remove('fade');
-    }, 300);
+    createButtons();
 
-    buildOptions();
+    msgEl.innerText = "Repeat the pattern";
+
     startTimer();
-    setMsg('Rebuild it in order.');
+
   }, 8000);
-}
-
-function buildOptions() {
-
-  optsEl.innerHTML = '';
-
-  shuffle(items).forEach(item => {
-
-    const btn = document.createElement('button');
-    btn.className = 'opt';
-    btn.textContent = item;
-    btn.addEventListener('click', () => pick(item) );
-    optsEl.appendChild(btn);
-  });
 
 }
 
-function endGame() {
+function gameOver() {
 
   clearInterval(timer);
   clearInterval(memorizeTimer);
 
-  lives = 0;
+  optsEl.innerHTML = "";
 
-  updateDots();
+  msgEl.innerText = "Game Over";
 
-  optsEl.innerHTML = '';
-  timerRow.style.visibility = 'visible';
-  bar.style.transition = 'none';
-  bar.style.width = '0%';
-  seqEl.textContent = '· · · · ·';
+  startBtn.innerText = "Play Again";
 
-  setMsg('Game over.', 'bad');
+  startBtn.style.display = "block";
+  resignBtn.style.display = "none";
 
-  startBtn.textContent = 'Play again';
-
-  showStart();
+  seqEl.innerText = "· · · · ·";
 }
 
-function checkGameOver() {
-
-  if (lives <= 0) {
-
-    endGame();
-  }
-
-}
-
-function pick(item) {
+function checkAnswer(item) {
 
   sequence.push(item);
 
-  const currentIndex = sequence.length - 1;
+  let index = sequence.length - 1;
 
-  if (sequence[currentIndex] !== pattern[currentIndex] ) {
+  if(sequence[index] !== pattern[index]) {
 
     clearInterval(timer);
 
     lives--;
-    updateDots();
-    setMsg('Wrong pattern.', 'bad');
+
+    updateLives();
+
+    msgEl.innerText = "Wrong Pattern";
+
     sequence = [];
-    checkGameOver();
 
-    if (lives > 0) {
+    if(lives <= 0) {
 
-      setTimeout(() => {
-
-        generate();
-        show();
-
-      }, 1200);
+      gameOver();
+      return;
     }
+
+    setTimeout(function() {
+
+      generatePattern();
+      showPattern();
+
+    }, 1000);
 
     return;
   }
 
-  if (sequence.length === pattern.length) {
+  if(sequence.length === pattern.length) {
 
     clearInterval(timer);
 
     score++;
-    scoreEl.textContent = score;
 
-    setMsg('Correct!', 'ok');
+    scoreEl.innerText = score;
 
-    setTimeout(() => {
+    msgEl.innerText = "Correct!";
 
-      generate();
-      show();
+    setTimeout(function() {
 
-    }, 1200);
+      generatePattern();
+      showPattern();
+
+    }, 1000);
 
   }
 
 }
 
-startBtn.addEventListener('click', () => {
+startBtn.addEventListener("click", function() {
 
-    if (lives <= 0) {
-      location.reload();
-      return;
-    }
+  if(lives <= 0) {
+    location.reload();
+    return;
+  }
 
-    generate();
-    show();
+  generatePattern();
+  showPattern();
+
 });
 
-resignBtn.addEventListener('click', () => {
+resignBtn.addEventListener("click", function() {
 
-    setMsg('You resigned.', 'bad');
-    endGame();
-}); 
+  gameOver();
+
+});
